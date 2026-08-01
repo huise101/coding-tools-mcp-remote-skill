@@ -1,0 +1,36 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate skill frontmatter
+        shell: pwsh
+        run: |
+          $content = Get-Content -Raw -Encoding UTF8 .\coding-tools-mcp-remote\SKILL.md
+          if ($content -notmatch '(?s)^---\s+name:\s*coding-tools-mcp-remote\s+description:\s+.+?\s+---') {
+            throw "SKILL.md frontmatter is missing name or description"
+          }
+
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $errors = @()
+          foreach ($file in Get-ChildItem .\coding-tools-mcp-remote\scripts\*.ps1) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors) {
+              $errors += $parseErrors | ForEach-Object { "$($file.Name): $($_.Message)" }
+            }
+          }
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }

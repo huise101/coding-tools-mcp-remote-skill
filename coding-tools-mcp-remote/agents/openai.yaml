@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coding Tools MCP Remote"
+  short_description: "Set up ChatGPT remote MCP tunnels on Windows."
+  default_prompt: "Use $coding-tools-mcp-remote to set up or repair a Windows Coding Tools MCP server for ChatGPT."
